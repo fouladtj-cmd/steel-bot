@@ -1,0 +1,27 @@
+name: steel-daily
+
+on:
+  schedule:
+    - cron: "30 4 * * *"
+    - cron: "30 13 * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests jdatetime
+      - name: Run bot
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then MODE=all
+          elif [ "${{ github.event.schedule }}" = "30 4 * * *" ]; then MODE=morning
+          else MODE=evening; fi
+          python steel_bot.py $MODE
